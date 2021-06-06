@@ -73,14 +73,14 @@ resource "oci_core_security_list" "isolated" {
     }
   }
 
-  # Allow pings from VCN only.
+  # Allow ping requests from VCN only.
   ingress_security_rules {
     stateless   = false
     source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
     protocol = "1"
     icmp_options {
-      type = 0
+      type = 8
     }
   }
 }
@@ -144,14 +144,14 @@ resource "oci_core_security_list" "public" {
     }
   }
 
-  # Allow pings from VCN only.
+  # Allow ping requests from VCN only.
   ingress_security_rules {
     stateless   = false
     source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
     protocol = "1"
     icmp_options {
-      type = 0
+      type = 8
     }
   }
 }
