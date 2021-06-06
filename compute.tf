@@ -3,8 +3,8 @@ resource "oci_core_instance" "tengu" {
   compartment_id      = oci_identity_compartment.always_free.id
   shape               = var.compute_shape
   shape_config {
-    memory_in_gbs = var.compute_shape_mem_gbs
-    ocpus         = var.compute_shape_ocpus
+    memory_in_gbs = 4
+    ocpus         = 1
   }
 
   source_details {
@@ -30,8 +30,8 @@ resource "oci_core_instance" "kitsune" {
   compartment_id      = oci_identity_compartment.always_free.id
   shape               = var.compute_shape
   shape_config {
-    memory_in_gbs = var.compute_shape_mem_gbs
-    ocpus         = var.compute_shape_ocpus
+    memory_in_gbs = 4
+    ocpus         = 2
   }
 
   source_details {
@@ -58,8 +58,8 @@ resource "oci_core_instance" "amaterasu" {
   compartment_id      = oci_identity_compartment.always_free.id
   shape               = var.compute_shape
   shape_config {
-    memory_in_gbs = var.compute_shape_mem_gbs
-    ocpus         = var.compute_shape_ocpus
+    memory_in_gbs = 16
+    ocpus         = 1
   }
 
   source_details {

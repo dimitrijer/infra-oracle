@@ -38,16 +38,6 @@ variable "compute_shape" {
   default = "VM.Standard.A1.Flex"
 }
 
-variable "compute_shape_mem_gbs" {
-  type    = number
-  default = 24
-}
-
-variable "compute_shape_ocpus" {
-  type    = number
-  default = 4
-}
-
 variable "compute_image_ocid" {
   type = string
   # Oracle Linux 8.3 aarch64

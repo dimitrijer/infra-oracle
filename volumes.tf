@@ -9,8 +9,8 @@ resource "oci_core_volume" "cache" {
 
 resource "oci_core_volume_attachment" "cache_kitsune" {
   attachment_type = "paravirtualized"
-  instance_id = oci_core_instance.kitsune.id
-  volume_id = oci_core_volume.cache.id
+  instance_id     = oci_core_instance.kitsune.id
+  volume_id       = oci_core_volume.cache.id
 
   display_name = "Cache"
 }
