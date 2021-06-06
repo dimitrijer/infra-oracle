@@ -32,19 +32,19 @@ resource "oci_core_security_list" "isolated" {
     stateless   = false
     source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
-    protocol = "6"
+    protocol    = "6"
     tcp_options {
       min = 6379
       max = 6379
     }
   }
 
-  # Allow worker gRPC traffic ingress from backend subnet only.
+  # Allow worker gRPC traffic ingress from VCN only (server is in frontend subnet).
   ingress_security_rules {
     stateless   = false
-    source      = var.backend_cidr
+    source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
-    protocol = "6"
+    protocol    = "6"
     tcp_options {
       min = 8981
       max = 8981
@@ -68,7 +68,7 @@ resource "oci_core_security_list" "isolated" {
     stateless   = false
     source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
-    protocol = "1"
+    protocol    = "1"
     icmp_options {
       type = 3
     }
@@ -79,7 +79,7 @@ resource "oci_core_security_list" "isolated" {
     stateless   = false
     source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
-    protocol = "1"
+    protocol    = "1"
     icmp_options {
       type = 8
     }
@@ -150,7 +150,7 @@ resource "oci_core_security_list" "public" {
     stateless   = false
     source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
-    protocol = "1"
+    protocol    = "1"
     icmp_options {
       type = 8
     }
