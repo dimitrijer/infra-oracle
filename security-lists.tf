@@ -26,13 +26,11 @@ resource "oci_core_security_list" "isolated" {
     }
   }
 
-  # Allow Redis ingress from VCN only.
+  # Allow Redis ingress from backend subnet only.
   ingress_security_rules {
     stateless   = false
     source      = var.backend_cidr
     source_type = "CIDR_BLOCK"
-    # TCP is 6
-    # https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
     protocol = "6"
     tcp_options {
       min = 6379
@@ -40,6 +38,17 @@ resource "oci_core_security_list" "isolated" {
     }
   }
 
+  # Allow worker gRPC traffic ingress from backend subnet only.
+  ingress_security_rules {
+    stateless   = false
+    source      = var.backend_cidr
+    source_type = "CIDR_BLOCK"
+    protocol = "6"
+    tcp_options {
+      min = 8981
+      max = 8981
+    }
+  }
   # Allow ICMP ingress.
   ingress_security_rules {
     stateless   = false
@@ -58,12 +67,20 @@ resource "oci_core_security_list" "isolated" {
     stateless   = false
     source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
-    # Get protocol numbers from https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml ICMP is 1  
     protocol = "1"
-
-    # For ICMP type and code see: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
     icmp_options {
       type = 3
+    }
+  }
+
+  # Allow pings from VCN only.
+  ingress_security_rules {
+    stateless   = false
+    source      = var.vcn_cidr
+    source_type = "CIDR_BLOCK"
+    protocol = "1"
+    icmp_options {
+      type = 0
     }
   }
 }
@@ -124,6 +141,17 @@ resource "oci_core_security_list" "public" {
     protocol    = "1"
     icmp_options {
       type = 3
+    }
+  }
+
+  # Allow pings from VCN only.
+  ingress_security_rules {
+    stateless   = false
+    source      = var.vcn_cidr
+    source_type = "CIDR_BLOCK"
+    protocol = "1"
+    icmp_options {
+      type = 0
     }
   }
 }
