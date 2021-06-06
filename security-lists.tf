@@ -26,10 +26,11 @@ resource "oci_core_security_list" "isolated" {
     }
   }
 
-  # Allow Redis ingress from backend subnet only.
+  # Allow Redis ingress from VCN only (both worker and server need to connect
+  # to Redis)
   ingress_security_rules {
     stateless   = false
-    source      = var.backend_cidr
+    source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
     protocol = "6"
     tcp_options {
