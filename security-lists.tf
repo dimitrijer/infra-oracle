@@ -26,6 +26,20 @@ resource "oci_core_security_list" "isolated" {
     }
   }
 
+  # Allow Redis ingress from VCN only.
+  ingress_security_rules {
+    stateless   = false
+    source      = var.backend_cidr
+    source_type = "CIDR_BLOCK"
+    # TCP is 6
+    # https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
+    protocol = "6"
+    tcp_options {
+      min = 6379
+      max = 6379
+    }
+  }
+
   # Allow ICMP ingress.
   ingress_security_rules {
     stateless   = false
@@ -77,6 +91,18 @@ resource "oci_core_security_list" "public" {
     tcp_options {
       min = 22
       max = 22
+    }
+  }
+
+  # Allow ingress Bazel port from anywhere.
+  ingress_security_rules {
+    stateless   = false
+    source      = var.everywhere_cidr
+    source_type = "CIDR_BLOCK"
+    protocol    = "6"
+    tcp_options {
+      min = 8980
+      max = 8980
     }
   }
 
