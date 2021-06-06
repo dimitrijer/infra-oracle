@@ -7,6 +7,8 @@ resource "oci_core_subnet" "frontend" {
   route_table_id    = module.vcn.ig_route_id
   security_list_ids = [oci_core_security_list.public.id]
   display_name      = "Frontend"
+  dhcp_options_id   = oci_core_dhcp_options.this.id
+  dns_label         = "frontend"
 }
 
 resource "oci_core_subnet" "backend" {
@@ -15,8 +17,11 @@ resource "oci_core_subnet" "backend" {
   cidr_block     = var.backend_cidr
 
   # Use route table from the NAT gateway.
-  route_table_id             = module.vcn.nat_route_id
-  security_list_ids          = [oci_core_security_list.isolated.id]
-  display_name               = "Backend"
+  route_table_id    = module.vcn.nat_route_id
+  security_list_ids = [oci_core_security_list.isolated.id]
+  display_name      = "Backend"
+  dhcp_options_id   = oci_core_dhcp_options.this.id
+  dns_label         = "backend"
+
   prohibit_public_ip_on_vnic = true
 }
