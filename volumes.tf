@@ -4,7 +4,7 @@ resource "oci_core_volume" "cache" {
 
   display_name = "Cache"
 
-  size_in_gbs = 200
+  size_in_gbs = 50
 }
 
 resource "oci_core_volume_attachment" "cache_kitsune" {
