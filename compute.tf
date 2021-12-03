@@ -26,7 +26,7 @@ resource "oci_core_instance" "tengu" {
 }
 
 resource "oci_core_instance" "kitsune" {
-  availability_domain = data.oci_identity_availability_domains.ads.availability_domains[1].name
+  availability_domain = data.oci_identity_availability_domains.ads.availability_domains[2].name
   compartment_id      = oci_identity_compartment.always_free.id
   shape               = var.compute_shape
   shape_config {
