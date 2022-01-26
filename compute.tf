@@ -4,7 +4,7 @@ resource "oci_core_instance" "tengu" {
   shape               = var.compute_shape
   shape_config {
     memory_in_gbs = 4
-    ocpus         = 1
+    ocpus         = 2
   }
 
   source_details {
@@ -30,8 +30,8 @@ resource "oci_core_instance" "kitsune" {
   compartment_id      = oci_identity_compartment.always_free.id
   shape               = var.compute_shape
   shape_config {
-    memory_in_gbs = 4
-    ocpus         = 2
+    memory_in_gbs = 10
+    ocpus         = 1
   }
 
   source_details {
@@ -58,7 +58,7 @@ resource "oci_core_instance" "amaterasu" {
   compartment_id      = oci_identity_compartment.always_free.id
   shape               = var.compute_shape
   shape_config {
-    memory_in_gbs = 16
+    memory_in_gbs = 10
     ocpus         = 1
   }
 
