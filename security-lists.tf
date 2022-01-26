@@ -26,30 +26,30 @@ resource "oci_core_security_list" "isolated" {
     }
   }
 
-  # Allow Redis ingress from VCN only (both worker and server need to connect
-  # to Redis)
+  # Allow kubelet traffic ingress from VCN only (server is in frontend subnet).
   ingress_security_rules {
     stateless   = false
     source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
     protocol    = "6"
     tcp_options {
-      min = 6379
-      max = 6379
+      min = 10250
+      max = 10250
     }
   }
 
-  # Allow worker gRPC traffic ingress from VCN only (server is in frontend subnet).
+  # Allow Flannel UDP traffic.
   ingress_security_rules {
     stateless   = false
     source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
-    protocol    = "6"
-    tcp_options {
-      min = 8981
-      max = 8981
+    protocol    = "17"
+    udp_options {
+      min = 8472
+      max = 8472
     }
   }
+
   # Allow ICMP ingress.
   ingress_security_rules {
     stateless   = false
@@ -112,15 +112,51 @@ resource "oci_core_security_list" "public" {
     }
   }
 
-  # Allow ingress Bazel port from anywhere.
+  # Allow ingress HTTPS to Kubernetes from anywhere.
   ingress_security_rules {
     stateless   = false
     source      = var.everywhere_cidr
     source_type = "CIDR_BLOCK"
     protocol    = "6"
     tcp_options {
-      min = 8980
-      max = 8980
+      min = 443
+      max = 443
+    }
+  }
+
+  # Allow kubectl from VCN only.
+  ingress_security_rules {
+    stateless   = false
+    source      = var.vcn_cidr
+    source_type = "CIDR_BLOCK"
+    protocol    = "6"
+    tcp_options {
+      min = 6443
+      max = 6443
+    }
+  }
+
+  # Allow kubelet traffic ingress from VCN only (server is in frontend subnet).
+  ingress_security_rules {
+    stateless   = false
+    source      = var.vcn_cidr
+    source_type = "CIDR_BLOCK"
+    protocol    = "6"
+    tcp_options {
+      min = 10250
+      max = 10250
+    }
+  }
+
+  # Allow Flannel UDP traffic.
+  ingress_security_rules {
+    stateless   = false
+    source      = var.vcn_cidr
+    source_type = "CIDR_BLOCK"
+    protocol    = "17"
+    udp_options {
+      min = 8472
+      max = 8472
     }
   }
 
