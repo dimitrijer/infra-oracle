@@ -1,0 +1,23 @@
+---
+- name: Add Docker CE Stable repository
+  yum_repository:
+    name: docker-ce
+    description: Docker Community Edition Stable
+    baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+    state: present
+
+- name: Install Docker CE
+  dnf:
+    name: docker-ce
+    state: present
+
+- name: Make sure Docker uses systemd cgroupdriver
+  copy:
+    src: daemon.json
+    dest: /etc/docker/daemon.json
+
+- name: Enable and start Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
