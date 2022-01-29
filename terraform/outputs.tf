@@ -15,27 +15,27 @@ output "always_free_compartment_ocid" {
 
 output "internal_vcn_ocid" {
   description = "Internal VCN OCID"
-  value       = module.vcn.vcn_id
+  value       = oci_core_virtual_network.vcn.id
+}
+
+output "internal_nat_gateway_route_table_ocid" {
+  description = "OCID of the nat-route table - This route table has a nat gateway to be used for private subnets."
+  value       = oci_core_route_table.backend_route_table.id
 }
 
 output "internal_internet_gateway_route_table_ocid" {
   description = "OCID of the internet-route table. This route table has an internet gateway to be used for public subnets"
-  value       = module.vcn.ig_route_id
+  value       = oci_core_route_table.frontend_route_table.id
 }
 
 output "internal_nat_gateway_ocid" {
   description = "NAT gateway OCID"
-  value       = module.vcn.nat_gateway_id
+  value       = oci_core_nat_gateway.nat_gateway.id
 }
 
 output "internal_internet_gateway_ocid" {
   description = "Internet gateway OCID"
-  value       = module.vcn.internet_gateway_id
-}
-
-output "internal_nat_gateway_route_table_ocid" {
-  description = "OCID of the nat-route table - This route table has a nat gateway to be used for private subnets. This route table also has a service gateway."
-  value       = module.vcn.nat_route_id
+  value       = oci_core_internet_gateway.internet_gateway.id
 }
 
 output "isolated_security_list_name" {
@@ -70,12 +70,8 @@ output "frontend_subnet_id" {
   value = oci_core_subnet.frontend.id
 }
 
-output "dhcp_options_name" {
-  value = oci_core_dhcp_options.this.display_name
-}
-
 output "dhcp_options_ocid" {
-  value = oci_core_dhcp_options.this.id
+  value = oci_core_virtual_network.vcn.default_dhcp_options_id
 }
 
 output "tengu_instance_public_ip" {
@@ -124,4 +120,20 @@ output "amaterasu_instance_state" {
 
 output "amaterasu_instance_time_created" {
   value = oci_core_instance.amaterasu.time_created
+}
+
+output "kirin_instance_public_ip" {
+  value = oci_core_instance.kirin.public_ip
+}
+
+output "kirin_instance_private_ip" {
+  value = oci_core_instance.kirin.private_ip
+}
+
+output "kirin_instance_state" {
+  value = oci_core_instance.kirin.state
+}
+
+output "kirin_instance_time_created" {
+  value = oci_core_instance.kirin.time_created
 }

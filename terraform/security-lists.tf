@@ -1,6 +1,6 @@
 resource "oci_core_security_list" "isolated" {
   compartment_id = oci_identity_compartment.always_free.id
-  vcn_id         = module.vcn.vcn_id
+  vcn_id         = oci_core_virtual_network.vcn.id
 
   display_name = "Isolated"
 
@@ -88,7 +88,7 @@ resource "oci_core_security_list" "isolated" {
 
 resource "oci_core_security_list" "public" {
   compartment_id = oci_identity_compartment.always_free.id
-  vcn_id         = module.vcn.vcn_id
+  vcn_id         = oci_core_virtual_network.vcn.id
 
   display_name = "Public"
 

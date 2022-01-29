@@ -13,6 +13,11 @@ variable "user_ocid" {
   default = "ocid1.user.oc1..aaaaaaaatmiycrni3hup7j4eixnc3q74udchdmgs5o27h4l4azktwwf4s27a"
 }
 
+variable "compartment_ocid" {
+  type    = string
+  default = "ocid1.tenancy.oc1..aaaaaaaad67tc34c4ewom6shamozbbiwc3eakmeanreimxthvodydnnmkagq"
+}
+
 variable "vcn_cidr" {
   type    = string
   default = "192.168.0.0/16"
