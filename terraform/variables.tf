@@ -38,11 +38,23 @@ variable "compute_shape" {
   default = "VM.Standard.A1.Flex"
 }
 
-variable "compute_image_ocid" {
+variable "micro_compute_shape" {
+  type    = string
+  default = "VM.Standard.E2.1.Micro"
+}
+
+variable "compute_image_aarch64_ocid" {
   type = string
   # Oracle Linux 8.3 aarch64
   # https://cloud.oracle.com/compute/images/ocid1.image.oc1.eu-frankfurt-1.aaaaaaaafw77tp7hx2x2u3ogz427hqkgh3vln3znwlkzau3p7edrlb7x6tda?region=eu-frankfurt-1
   default = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaafw77tp7hx2x2u3ogz427hqkgh3vln3znwlkzau3p7edrlb7x6tda"
+}
+
+variable "compute_image_x86_ocid" {
+  type = string
+  # Oracle Linux 8.3 x86
+  # https://cloud.oracle.com/compute/images/ocid1.image.oc1.eu-frankfurt-1.aaaaaaaacdxb2cpmyxtqfinev5vywq6yu4p47mgty6wjfd7xmrgauop6ieya?region=eu-frankfurt-1
+  default = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaacdxb2cpmyxtqfinev5vywq6yu4p47mgty6wjfd7xmrgauop6ieya"
 }
 
 variable "pubkey" {

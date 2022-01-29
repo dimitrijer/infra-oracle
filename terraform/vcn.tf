@@ -7,7 +7,7 @@ module "vcn" {
   vcn_dns_label  = "internal"
 
   internet_gateway_enabled = true
-  nat_gateway_enabled      = true
-  service_gateway_enabled  = true
+  nat_gateway_enabled      = false
+  service_gateway_enabled  = false
   vcn_cidr                 = var.vcn_cidr
 }
