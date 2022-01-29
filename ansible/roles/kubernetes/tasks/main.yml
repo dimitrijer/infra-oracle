@@ -1,0 +1,69 @@
+---
+- name: Disable SELinux
+  selinux:
+    state: permissive
+    policy: targeted
+
+- name: Load br_netfilter module now
+  modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Make br_netfilter module load on boot
+  lineinfile:
+    path: /etc/modules-load.d/k8s.conf
+    line: br_netfilter
+
+- name: Enable bridge-nf-call-iptables and IP forwarding
+  lineinfile:
+    path: /etc/sysctl.d/k8s.conf
+    line: "{{ item }}"
+  with_items:
+    - 'net.bridge.bridge-nf-call-iptables = 1'
+    - 'net.bridge.bridge-nf-call-ip6tables = 1'
+    - 'net.ipv4.ip_forward = 1'
+
+- name: Reload sysctl
+  command: sysctl --system
+  changed_when: no
+
+- name: Disable swap for performance
+  command: swapoff -a
+  changed_when: no
+
+- name: Comment-out swap entry from fstab
+  replace:
+    path: /etc/fstab
+    regexp: '^([^#].*?\sswap\s+sw.*)$'
+    replace: '#\1'
+
+- name: Add Kubernetes repository
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes EL7
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-$basearch
+    gpgkey:
+      - https://packages.cloud.google.com/yum/doc/yum-key.gpg
+      - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    gpgcheck: yes
+    repo_gpgcheck: yes
+    exclude:
+      - kubeadm
+      - kubectl
+      - kubelet
+    state: present
+
+- name: Install Kubernetes
+  dnf:
+    name:
+      - kubeadm
+      - kubectl
+      - kubelet
+    disable_excludes: kubernetes
+    state: present
+
+- name: Enable kubelet service
+  systemd:
+    name: kubelet
+    state: started
+    enabled: yes

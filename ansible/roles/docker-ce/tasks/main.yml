@@ -4,6 +4,8 @@
     name: docker-ce
     description: Docker Community Edition Stable
     baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+    gpgcheck: yes
+    gpgkey: https://download.docker.com/linux/centos/gpg
     state: present
 
 - name: Install Docker CE
@@ -13,7 +15,7 @@
 
 - name: Make sure Docker uses systemd cgroupdriver
   copy:
-    src: daemon.json
+    src: etc/docker/daemon.json
     dest: /etc/docker/daemon.json
 
 - name: Enable and start Docker
