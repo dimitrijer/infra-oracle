@@ -33,6 +33,11 @@ variable "frontend_cidr" {
   default = "192.168.1.0/24"
 }
 
+variable "nat_gateway_ip" {
+  type    = string
+  default = "192.168.1.250"
+}
+
 variable "everywhere_cidr" {
   type    = string
   default = "0.0.0.0/0"
