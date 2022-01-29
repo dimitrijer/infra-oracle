@@ -62,6 +62,28 @@
     disable_excludes: kubernetes
     state: present
 
+- name: Set up incoming traffic firewall rules
+  firewalld:
+    zone: public
+    port: "{{ item }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items:
+    # Kubelet API
+    - '10250/tcp'
+    # Flannel vxlan backend traffic
+    - '8472/udp'
+
+- name: Set up incoming traffic firewall rules for control plane node(s)
+  firewalld:
+    zone: public
+    port: '6443/tcp' # Kubernetes API
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: is_control_plane
+
 - name: Enable kubelet service
   systemd:
     name: kubelet
