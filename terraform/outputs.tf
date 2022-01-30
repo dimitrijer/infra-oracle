@@ -5,7 +5,6 @@ output "tengu_instance_public_ip" {
 output "tengu_instance_private_ip" {
   value = oci_core_instance.tengu.private_ip
 }
-
 output "tengu_instance_state" {
   value = oci_core_instance.tengu.state
 }
@@ -60,4 +59,11 @@ output "kirin_instance_state" {
 
 output "kirin_instance_time_created" {
   value = oci_core_instance.kirin.time_created
+}
+
+resource "local_file" "ansible_inventory" {
+  content = templatefile("inventory.tmpl", {
+    tengu_public_ip = oci_core_instance.tengu.public_ip
+  })
+  filename = "../ansible/inventories/hosts.ini"
 }
