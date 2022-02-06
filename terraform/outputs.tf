@@ -64,6 +64,7 @@ output "kirin_instance_time_created" {
 resource "local_file" "ansible_inventory" {
   content = templatefile("inventory.tmpl", {
     tengu_public_ip = oci_core_instance.tengu.public_ip
+    nat_ip = var.nat_gateway_ip
   })
   filename = "../ansible/inventories/hosts.ini"
 }
