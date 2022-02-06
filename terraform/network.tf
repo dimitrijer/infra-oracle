@@ -27,10 +27,6 @@ resource "oci_core_route_table" "frontend_route_table" {
   }
 }
 
-data "oci_core_private_ips" "nat_vnic_ip_addresses" {
-  vnic_id = oci_core_vnic_attachment.nat_gateway_vnic.vnic_id
-}
-
 resource "oci_core_route_table" "backend_route_table" {
   compartment_id = oci_identity_compartment.always_free.id
   vcn_id = oci_core_virtual_network.vcn.id

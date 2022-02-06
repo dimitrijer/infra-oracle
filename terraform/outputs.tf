@@ -65,6 +65,8 @@ resource "local_file" "ansible_inventory" {
   content = templatefile("inventory.tmpl", {
     tengu_public_ip = oci_core_instance.tengu.public_ip
     nat_ip = var.nat_gateway_ip
+    vcn_dns_label = oci_core_virtual_network.vcn.dns_label
+    backend_dns_label = oci_core_subnet.backend.dns_label
   })
   filename = "../ansible/inventories/hosts.ini"
 }

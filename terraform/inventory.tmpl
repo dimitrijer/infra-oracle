@@ -1,9 +1,9 @@
 tengu ansible_host=${tengu_public_ip} is_control_plane=yes nat_ip=${nat_ip}
 
 [workers]
-kitsune ansible_host=kitsune.backend.internal.oraclevcn.com
-amaterasu ansible_host=amaterasu.backend.internal.oraclevcn.com
-kirin ansible_host=kirin.backend.internal.oraclevcn.com
+kitsune ansible_host=kitsune.${backend_dns_label}.${vcn_dns_label}.oraclevcn.com
+amaterasu ansible_host=amaterasu.${backend_dns_label}.${vcn_dns_label}.oraclevcn.com
+kirin ansible_host=kirin.${backend_dns_label}.${vcn_dns_label}.oraclevcn.com
 
 [workers:vars]
 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ProxyCommand="ssh -W %h:%p -o \'ForwardAgent=yes\' opc@${tengu_public_ip}"'
