@@ -6,21 +6,30 @@
     - { role: 'kubernetes', tags: kubernetes }
 
 - hosts: cp
+  tags: kubernetes
   vars:
     pod_network_cidr: '10.244.0.0/16'
     api_advertise_addr: "{{ ansible_enp0s3.ipv4.address }}"
     # Flannel manifest also bundles RBAC permissions.
     network_plugin_manifest: https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
   tasks:
+    - name: Check if Kubernetes is already configured
+      stat:
+        path: /etc/kubernetes/admin.conf
+      become: yes
+      register: admin_conf
+
     - name: Intializing Kubernetes Control Plane
       command: kubeadm init --pod-network-cidr "{{ pod_network_cidr }}" --apiserver-advertise-address "{{ api_advertise_addr }}"
       become: yes
       run_once: yes
+      when: not admin_conf.stat.exists
 
     - name: Create directory for Kubernetes config
       file:
        path: /home/{{ ansible_user }}/.kube
        state: directory
+      when: not admin_conf.stat.exists
 
     - name: Copy Kubernetes admin conf to config dir
       copy:
@@ -30,16 +39,27 @@
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
         mode: '0644'
+      become: yes
+      when: not admin_conf.stat.exists
 
     - name: Initialize network plugin
       command: kubectl apply -f {{ network_plugin_manifest }}
+      when: not admin_conf.stat.exists
 
     - name: Get join command
-      shell: kubeadm token create  --print-join-command 
+      command: kubeadm token create --print-join-command 
       register: cluster_join_command
+      changed_when: no
 
 - hosts: workers
+  tags: kubernetes
   become: true
   tasks: 
+    - name: Check if the worker has already joined
+      stat:
+        path: /etc/kubernetes/kubelet.conf
+      register: kubelet_conf
+
     - name: Join the cluster
-      command: "sh {{ hostvars['tengu']['cluster_join_command'] }}"
+      command: "{{ hostvars['tengu']['cluster_join_command'].stdout }}"
+      when: not kubelet_conf.stat.exists

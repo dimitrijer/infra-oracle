@@ -13,6 +13,11 @@
     name: docker-ce
     state: present
 
+- name: Docker directory should exist
+  file:
+    path: /etc/docker
+    state: directory
+
 - name: Make sure Docker uses systemd cgroupdriver
   copy:
     src: etc/docker/daemon.json
