@@ -101,6 +101,14 @@ resource "oci_core_security_list" "public" {
     protocol         = "all"
   }
 
+  # Allow all ingress for Backend subnet (NAT).
+  ingress_security_rules {
+    stateless = false
+    source = var.backend_cidr
+    source_type = "CIDR_BLOCK"
+    protocol = "all"
+  }
+
   # Allow ingress SSH from anywhere.
   ingress_security_rules {
     stateless   = false
