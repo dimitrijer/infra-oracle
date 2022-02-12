@@ -38,7 +38,7 @@ variable "nat_gateway_ip" {
   default = "192.168.1.250"
 }
 
-variable "everywhere_cidr" {
+variable "all_cidr" {
   type    = string
   default = "0.0.0.0/0"
 }

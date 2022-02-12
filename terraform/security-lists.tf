@@ -50,10 +50,10 @@ resource "oci_core_security_list" "isolated" {
     }
   }
 
-  # Allow ICMP ingress.
+  # Allow ICMP ingress from VCN only.
   ingress_security_rules {
     stateless   = false
-    source      = var.everywhere_cidr
+    source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
     # ICMP is 1
     protocol = "1"
@@ -64,6 +64,7 @@ resource "oci_core_security_list" "isolated" {
     }
   }
 
+  # ICMP Destination Unreachable from VCN only.
   ingress_security_rules {
     stateless   = false
     source      = var.vcn_cidr
@@ -74,7 +75,7 @@ resource "oci_core_security_list" "isolated" {
     }
   }
 
-  # Allow ping requests from VCN only.
+  # ICMP Echo from VCN only.
   ingress_security_rules {
     stateless   = false
     source      = var.vcn_cidr
@@ -95,7 +96,7 @@ resource "oci_core_security_list" "public" {
   # Allow all egress.
   egress_security_rules {
     stateless        = false
-    destination      = var.everywhere_cidr
+    destination      = var.all_cidr
     destination_type = "CIDR_BLOCK"
     protocol         = "all"
   }
@@ -103,7 +104,7 @@ resource "oci_core_security_list" "public" {
   # Allow ingress SSH from anywhere.
   ingress_security_rules {
     stateless   = false
-    source      = var.everywhere_cidr
+    source      = var.all_cidr
     source_type = "CIDR_BLOCK"
     protocol    = "6"
     tcp_options {
@@ -115,7 +116,7 @@ resource "oci_core_security_list" "public" {
   # Allow ingress HTTPS to Kubernetes from anywhere.
   ingress_security_rules {
     stateless   = false
-    source      = var.everywhere_cidr
+    source      = var.all_cidr
     source_type = "CIDR_BLOCK"
     protocol    = "6"
     tcp_options {
@@ -162,7 +163,7 @@ resource "oci_core_security_list" "public" {
 
   ingress_security_rules {
     stateless   = false
-    source      = var.everywhere_cidr
+    source      = var.all_cidr
     source_type = "CIDR_BLOCK"
     protocol    = "1"
     icmp_options {
@@ -173,7 +174,7 @@ resource "oci_core_security_list" "public" {
 
   ingress_security_rules {
     stateless   = false
-    source      = var.vcn_cidr
+    source      = var.all_cidr
     source_type = "CIDR_BLOCK"
     protocol    = "1"
     icmp_options {
@@ -181,7 +182,7 @@ resource "oci_core_security_list" "public" {
     }
   }
 
-  # Allow ping requests from VCN only.
+  # Allow ICMP Echo requests from VCN only.
   ingress_security_rules {
     stateless   = false
     source      = var.vcn_cidr
