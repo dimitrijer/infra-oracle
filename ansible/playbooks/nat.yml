@@ -17,6 +17,16 @@
       setup:
       when: ifs_down | length > 0
 
+    - name: Relax RP filtering to loose
+      lineinfile:
+        path: /etc/sysctl.d/nat.conf
+        line: "{{ item }}"
+        create: yes
+      with_items:
+        - 'net.ipv4.conf.all.rp_filter = 2'
+      notify:
+        - Reload sysctl
+
     - name: Un-ignore secondary VNIC with NetworkManager
       file:
         state: absent
@@ -65,6 +75,9 @@
       notify: Reload firewalld
 
   handlers:
+    - name: Reload sysctl
+      command: sysctl --system
+
     - name: Reload firewalld
       command: firewall-cmd --reload
 
