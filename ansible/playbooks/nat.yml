@@ -4,38 +4,41 @@
   vars:
     backend_subnet: '192.168.0.0/24'
     default_gateway: '192.168.1.1'
-    primary_if: "{{ ansible_facts.interfaces | map('extract', ansible_facts ) | list \
-                    | selectattr('ipv4.address', 'equalto', ansible_default_ipv4.address) \
-                    | first }}"
-    secondary_if: "{{ ansible_facts.interfaces | map('extract', ansible_facts ) | list \
-                      | selectattr('ipv4.address', 'equalto', hostvars[inventory_hostname].nat_ip) \
-                      | first }}"
+    ifs_dict: "{{ ansible_facts.interfaces | map('extract', ansible_facts) | list }}"
+    ifs_down: "{{ ifs_dict | rejectattr('ipv4', 'defined') | list }}"
+    primary_if: "{{ ifs_dict | selectattr('ipv4.address', 'equalto', ansible_default_ipv4.address) | first }}"
+    secondary_if: "{{ ifs_dict | selectattr('ipv4.address', 'equalto', hostvars[inventory_hostname].nat_ip) | first }}"
   tasks:
-    # ocid daemon sets up secondary NIC across reboots.
-    - name: Enable and start ocid daemon
-      systemd:
-        name: ocid
-        state: started
-        enabled: yes
-      register: ocid_started
-
-    - name: Run oci-network-config to set up secondary VNIC
+    - name: Bring up secondary VNIC
       command: oci-network-config -a
-      when: ocid_started.changed
+      when: ifs_down | length > 0
 
     - name: Re-collect facts to get IP address assigned to second VNIC
       setup:
-      when: ocid_started.changed
+      when: ifs_down | length > 0
 
-    - name: Relax RP filtering to loose
-      lineinfile:
-        path: /etc/sysctl.d/nat.conf
-        line: "{{ item }}"
-        create: yes
-      with_items:
-        - 'net.ipv4.conf.all.rp_filter = 2'
-      notify:
-        - Reload sysctl
+    - name: Un-ignore secondary VNIC with NetworkManager
+      file:
+        state: absent
+        path: "/etc/NetworkManager/conf.d/{{ secondary_if.macaddress| upper | replace(':','_') }}.conf"
+
+    - name: Manage secondary VNIC with NetworkManager
+      nmcli:
+        conn_name: "{{ secondary_if.device }}"
+        ifname: "{{ secondary_if.device }}"
+        state: present
+
+    - name: Check if static route is set up
+      shell: "ip route get 192.168.0.1 | grep {{ secondary_if.device }}"
+      register: route_check
+      changed_when: no
+      failed_when: no
+
+    - name: Set up static route for new VNIC 
+      command: "nmcli connection modify {{ secondary_if.device }} +ipv4.routes '{{ backend_subnet }} {{ default_gateway }}'"
+      when: route_check.rc != 0
+      notify: 
+        - Restart connection
 
     - name: Add primary interface to public zone
       firewalld:
@@ -43,6 +46,14 @@
         interface: "{{ primary_if.device }}"
         permanent: yes
         zone: public
+      notify: Reload firewalld
+
+    - name: Add secondary interface to internal zone
+      firewalld:
+        state: enabled
+        interface: "{{ secondary_if.device }}"
+        permanent: yes
+        zone: internal
       notify: Reload firewalld
 
     - name: Set up masquerading and forwarding
@@ -53,21 +64,14 @@
         zone: public
       notify: Reload firewalld
 
-    - name: Add static route for backend subnet
-      lineinfile:
-        path: "/etc/network/network-scripts/route-{{ secondary_if.device }}"
-        line: "{{ backend_subnet }} via {{ default_gateway }} dev {{ secondary_if.device }}"
-        create: true
-      notify: Restart network service
-
   handlers:
-    - name: Reload sysctl
-      command: sysctl --system
-
     - name: Reload firewalld
       command: firewall-cmd --reload
 
-    - name: Restart network service
-      systemd:
-        name: network
-        state: restarted
+    - name: Bring connection down
+      command: "nmcli conn down {{ secondary_if.device }}"
+      listen: Restart connection
+
+    - name: Bring connection up
+      command: "nmcli conn up {{ secondary_if.device }}"
+      listen: Restart connection
