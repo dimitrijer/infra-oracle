@@ -4,7 +4,7 @@
   vars:
     backend_subnet: '192.168.0.0/24'
     default_gateway: '192.168.1.1'
-    ifs_dict: "{{ ansible_facts.interfaces | map('extract', ansible_facts) | list }}"
+    ifs_dict: "{{ ansible_facts.interfaces | map('extract', ansible_facts) | selectattr('device', 'match', '^en.*') | list }}"
     ifs_down: "{{ ifs_dict | rejectattr('ipv4', 'defined') | list }}"
     primary_if: "{{ ifs_dict | selectattr('ipv4.address', 'equalto', ansible_default_ipv4.address) | first }}"
     secondary_if: "{{ ifs_dict | selectattr('ipv4.address', 'equalto', hostvars[inventory_hostname].nat_ip) | first }}"
