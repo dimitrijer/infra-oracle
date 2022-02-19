@@ -3,7 +3,8 @@ k8s_ns: development
 k8s_user: dimitrijer
 k8s_group: dev
 k8s_role: dev
-k8s_context: {{ k8s_user }}-{{ k8s_name }}
+k8s_context: "{{ k8s_user }}-{{ k8s_name }}"
+k8s_apiserver_port: 6443
 private_key: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   61373631353861356661663730353931623631326464333033343839316435376533326366376262

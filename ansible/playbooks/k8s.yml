@@ -64,13 +64,15 @@
       register: kubelet_conf
 
     - name: Join the cluster
-      command: "{{ hostvars['tengu']['cluster_join_command'].stdout }}"
+      command: "{{ cluster_join_command.stdout }}"
       when: not kubelet_conf.stat.exists
 
 - hosts: tengu
   vars:
     k8s_endpoint: "{{ hostvars['tengu'].ansible_host }}"
-  tags: k8s-crud
+  tags:
+    - kubernetes
+    - rbac
   tasks:
     - name: Create k8s Namespace
       k8s:
@@ -165,11 +167,6 @@
     - name: Render kubeconfig template
       template:
         src: templates/kubeconfig.j2
-        dest: "{{ lookup('env', 'HOME') }}/.kube/config }}"
+        dest: "{{ lookup('env', 'HOME') }}/.kube/config"
         force: no
       delegate_to: 127.0.0.1
-
-    - name: Set up credentials for local kubectl
-      command:
-        cmd: "kubectl config set-credentials {{ k8s_user }} --client-key=/dev/stdin --embed-certs"
-        stdin: "{{ private_key }}"
