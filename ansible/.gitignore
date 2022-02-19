@@ -1,0 +1,2 @@
+# Don't track vault password file.
+.vault_pass

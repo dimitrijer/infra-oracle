@@ -64,6 +64,10 @@
     disable_excludes: kubernetes
     state: present
 
+- name: Install k8s Python client library
+  pip:
+    name: kubernetes
+
 - name: Set up incoming traffic firewall rules
   firewalld:
     zone: public

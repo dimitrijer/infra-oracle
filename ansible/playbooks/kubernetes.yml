@@ -5,11 +5,14 @@
     - { role: 'docker-ce', tags: docker }
     - { role: 'kubernetes', tags: kubernetes }
 
-- hosts: cp
+- hosts: tengu
   tags: kubernetes
   vars:
     pod_network_cidr: '10.244.0.0/16'
+    # This is primary IP of the interface, not external IP.
     api_advertise_addr: "{{ ansible_enp0s3.ipv4.address }}"
+    # External public IP has to be specified as Subject Alternative Name for PKI to work.
+    api_extra_sans: "{{ hostvars[inventory_hostname]['ansible_host'] }}"
     # Flannel manifest also bundles RBAC permissions.
     network_plugin_manifest: https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
   tasks:
@@ -20,9 +23,8 @@
       register: admin_conf
 
     - name: Intializing Kubernetes Control Plane
-      command: kubeadm init --pod-network-cidr "{{ pod_network_cidr }}" --apiserver-advertise-address "{{ api_advertise_addr }}"
+      command: kubeadm init --pod-network-cidr "{{ pod_network_cidr }}" --apiserver-advertise-address "{{ api_advertise_addr }}" --apiserver-cert-extra-sans "{{ api_extra_sans }}"
       become: yes
-      run_once: yes
       when: not admin_conf.stat.exists
 
     - name: Create directory for Kubernetes config
@@ -46,15 +48,16 @@
       command: kubectl apply -f {{ network_plugin_manifest }}
       when: not admin_conf.stat.exists
 
-    - name: Get join command
-      command: kubeadm token create --print-join-command 
-      register: cluster_join_command
-      changed_when: no
-
 - hosts: workers
   tags: kubernetes
   become: true
   tasks: 
+    - name: Get join command
+      command: kubeadm token create --print-join-command 
+      register: cluster_join_command
+      changed_when: no
+      delegate_to: tengu
+
     - name: Check if the worker has already joined
       stat:
         path: /etc/kubernetes/kubelet.conf
@@ -63,3 +66,110 @@
     - name: Join the cluster
       command: "{{ hostvars['tengu']['cluster_join_command'].stdout }}"
       when: not kubelet_conf.stat.exists
+
+- hosts: tengu
+  vars:
+    k8s_endpoint: "{{ hostvars['tengu'].ansible_host }}"
+  tags: k8s-crud
+  tasks:
+    - name: Create k8s Namespace
+      k8s:
+        state: present
+        name: "{{ k8s_ns }}"
+        api_version: v1
+        kind: Namespace
+
+    - name: Create k8s Role
+      k8s:
+        state: present
+        definition:
+          kind: Role
+          apiVersion: rbac.authorization.k8s.io/v1
+          metadata:
+           namespace: "{{ k8s_ns }}"
+           name: "{{ k8s_role }}"
+          rules:
+          - apiGroups: [""]
+            resources: ["pods", "services"]
+            verbs: ["create", "get", "update", "list", "delete"]
+          - apiGroups: ["apps"]
+            resources: ["deployments"]
+            verbs: ["create", "get", "update", "list", "delete"]
+
+    - name: Create k8s RoleBinding for k8s Role
+      k8s:
+        state: present
+        definition:
+          kind: RoleBinding
+          apiVersion: rbac.authorization.k8s.io/v1
+          metadata:
+           name: "{{ k8s_group }}-{{ k8s_role }}"
+           namespace: "{{ k8s_ns }}"
+          subjects:
+          - kind: Group
+            name: "{{ k8s_group }}"
+            apiGroup: rbac.authorization.k8s.io
+          roleRef:
+           kind: Role
+           name: "{{ k8s_role }}"
+           apiGroup: rbac.authorization.k8s.io
+
+    - name: Check if certificate is issued
+      command: "kubectl get csr {{ k8s_user }} -o jsonpath='{.status.conditions[0].type}'"
+      ignore_errors: yes
+      changed_when: no
+      register: cert_status
+
+    - name: Generate CSR with private key
+      command:
+        cmd: "openssl req -new -key /dev/stdin -subj '/CN={{ k8s_user }}/O={{ k8s_group }}' -nodes -out /dev/stdout"
+        stdin: "{{ private_key }}"
+      register: csr
+      when: cert_status.rc != 0
+
+    - name: Create k8s CSR
+      k8s:
+        state: present
+        definition:
+          apiVersion: certificates.k8s.io/v1
+          kind: CertificateSigningRequest
+          metadata:
+            name: "{{ k8s_user }}"
+          spec:
+            request: "{{ csr.stdout | b64encode | replace('\n', '') }}"
+            signerName: kubernetes.io/kube-apiserver-client
+            expirationSeconds: 31557000 # ~one year
+            usages:
+            - client auth
+      when: cert_status.rc != 0
+
+    - name: Approve the CSR
+      command: "kubectl certificate approve {{ k8s_user }}"
+      when: cert_status.stdout != 'Approved'
+
+    - name: Get user certificate
+      command: "kubectl get csr {{ k8s_user }} -o jsonpath='{.status.certificate}'"
+      changed_when: no
+      register: cert
+    
+    - name: Get cluster CA
+      shell: kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}'
+      changed_when: no
+      register: ca
+
+    - name: Set up missing facts
+      set_fact:
+        k8s_ca: "{{ ca.stdout }}"
+        k8s_user_crt: "{{ cert.stdout }}"
+
+    - name: Render kubeconfig template
+      template:
+        src: templates/kubeconfig.j2
+        dest: "{{ lookup('env', 'HOME') }}/.kube/config }}"
+        force: no
+      delegate_to: 127.0.0.1
+
+    - name: Set up credentials for local kubectl
+      command:
+        cmd: "kubectl config set-credentials {{ k8s_user }} --client-key=/dev/stdin --embed-certs"
+        stdin: "{{ private_key }}"
