@@ -83,38 +83,13 @@
 
     - name: Create k8s Role
       k8s:
+        definition: "{{ lookup('template', 'role.yml.j2') | from_yaml }}"
         state: present
-        definition:
-          kind: Role
-          apiVersion: rbac.authorization.k8s.io/v1
-          metadata:
-           namespace: "{{ k8s_ns }}"
-           name: "{{ k8s_role }}"
-          rules:
-          - apiGroups: [""]
-            resources: ["pods", "services"]
-            verbs: ["create", "get", "update", "list", "delete"]
-          - apiGroups: ["apps"]
-            resources: ["deployments"]
-            verbs: ["create", "get", "update", "list", "delete"]
 
     - name: Create k8s RoleBinding for k8s Role
       k8s:
+        definition: "{{ lookup('template', 'role_binding.yml.j2') | from_yaml }}"
         state: present
-        definition:
-          kind: RoleBinding
-          apiVersion: rbac.authorization.k8s.io/v1
-          metadata:
-           name: "{{ k8s_group }}-{{ k8s_role }}"
-           namespace: "{{ k8s_ns }}"
-          subjects:
-          - kind: Group
-            name: "{{ k8s_group }}"
-            apiGroup: rbac.authorization.k8s.io
-          roleRef:
-           kind: Role
-           name: "{{ k8s_role }}"
-           apiGroup: rbac.authorization.k8s.io
 
     - name: Check if certificate is issued
       command: "kubectl get csr {{ k8s_user }} -o jsonpath='{.status.conditions[0].type}'"
@@ -131,18 +106,8 @@
 
     - name: Create k8s CSR
       k8s:
+        definition: "{{ lookup('template', 'csr.yml.j2') | from_yaml }}"
         state: present
-        definition:
-          apiVersion: certificates.k8s.io/v1
-          kind: CertificateSigningRequest
-          metadata:
-            name: "{{ k8s_user }}"
-          spec:
-            request: "{{ csr.stdout | b64encode | replace('\n', '') }}"
-            signerName: kubernetes.io/kube-apiserver-client
-            expirationSeconds: 31557000 # ~one year
-            usages:
-            - client auth
       when: cert_status.rc != 0
 
     - name: Approve the CSR
@@ -159,14 +124,12 @@
       changed_when: no
       register: ca
 
-    - name: Set up missing facts
-      set_fact:
-        k8s_ca: "{{ ca.stdout }}"
-        k8s_user_crt: "{{ cert.stdout }}"
-
     - name: Render kubeconfig template
       template:
         src: templates/kubeconfig.j2
         dest: "{{ lookup('env', 'HOME') }}/.kube/config"
         force: no
       delegate_to: 127.0.0.1
+      vars:
+        k8s_ca: "{{ ca.stdout }}"
+        k8s_user_crt: "{{ cert.stdout }}"

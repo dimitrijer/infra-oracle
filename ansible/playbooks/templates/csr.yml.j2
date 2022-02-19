@@ -1,0 +1,10 @@
+kind: CertificateSigningRequest
+apiVersion: certificates.k8s.io/v1
+metadata:
+  name: "{{ k8s_user }}"
+spec:
+  request: "{{ csr.stdout | b64encode | replace('\n', '') }}"
+  signerName: kubernetes.io/kube-apiserver-client
+  expirationSeconds: 31557000 # ~one year
+  usages:
+  - client auth
