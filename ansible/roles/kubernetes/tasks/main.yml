@@ -16,18 +16,11 @@
     create: yes
 
 - name: Enable bridge-nf-call-iptables and IP forwarding
-  lineinfile:
-    path: /etc/sysctl.d/k8s.conf
-    line: "{{ item }}"
+  copy:
+    src: k8s.conf
+    dest: /etc/sysctl.d/k8s.conf
     create: yes
-  with_items:
-    - 'net.bridge.bridge-nf-call-iptables = 1'
-    - 'net.bridge.bridge-nf-call-ip6tables = 1'
-    - 'net.ipv4.ip_forward = 1'
-
-- name: Reload sysctl
-  command: sysctl --system
-  changed_when: no
+  notify: Reload sysctl
 
 - name: Disable swap for performance
   command: swapoff -a
@@ -80,15 +73,36 @@
     - '10250/tcp'
     # Flannel vxlan backend traffic
     - '8472/udp'
+    # NodePort exposed ports
+    - '30000-32767/tcp'
+  when: not is_control_plane
+  notify: Reload firewalld
 
 - name: Set up incoming traffic firewall rules for control plane node(s)
   firewalld:
     zone: public
-    port: '6443/tcp' # Kubernetes API
+    port: "{{ item }}"
     permanent: yes
     immediate: yes
     state: enabled
+  with_items:
+    # Kubelet API
+    - '10250/tcp'
+    # Flannel vxlan backend traffic
+    - '8472/udp'
+    # API server.
+    - '6443/tcp'
   when: is_control_plane
+  notify: Reload firewalld
+
+  # This is required for traffic forwarding (for Flannel) to function correctly.
+- name: Enable masquerade
+  firewalld:
+    zone: public
+    permanent: yes
+    masquerade: yes
+    state: enabled
+  notify: Reload firewalld
 
 - name: Enable kubelet service
   systemd:

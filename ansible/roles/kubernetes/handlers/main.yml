@@ -1,0 +1,8 @@
+---
+- name: Reload sysctl
+  command: sysctl --system
+
+- name: Reload firewalld
+  systemd:
+    name: firewalld
+    status: restarted

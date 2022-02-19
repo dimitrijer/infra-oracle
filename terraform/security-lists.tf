@@ -50,6 +50,18 @@ resource "oci_core_security_list" "isolated" {
     }
   }
 
+  # Allow traffic to NodePort services.
+  ingress_security_rules {
+    stateless   = false
+    source      = var.vcn_cidr
+    source_type = "CIDR_BLOCK"
+    protocol    = "6"
+    udp_options {
+      min = 30000
+      max = 32767
+    }
+  }
+
   # Allow ICMP ingress from VCN only.
   ingress_security_rules {
     stateless   = false
@@ -130,6 +142,18 @@ resource "oci_core_security_list" "public" {
     tcp_options {
       min = 6443
       max = 6443
+    }
+  }
+
+  # Allow apiserver access from anywhere.
+  ingress_security_rules {
+    stateless   = false
+    source      = var.all_cidr
+    source_type = "CIDR_BLOCK"
+    protocol    = "6"
+    tcp_options {
+      min = 8080
+      max = 8080
     }
   }
 
