@@ -5,8 +5,8 @@ metadata:
  name: "{{ k8s_role }}"
 rules:
 - apiGroups: [""]
-  resources: ["pods", "services"]
-  verbs: ["create", "get", "update", "list", "delete"]
+  resources: ["pods", "services", "pods/log"]
+  verbs: ["create", "get", "update", "list", "delete", "patch"]
 - apiGroups: ["apps"]
-  resources: ["deployments", "replicasets"]
-  verbs: ["create", "get", "update", "list", "delete"]
+  resources: ["deployments", "replicasets", "deployments/scale"]
+  verbs: ["create", "get", "update", "list", "delete", "patch"]
