@@ -121,22 +121,10 @@ resource "oci_core_security_list" "public" {
     }
   }
 
-  # Allow ingress HTTPS to Kubernetes from anywhere.
+  # Allow apiserver access from anywhere.
   ingress_security_rules {
     stateless   = false
     source      = var.all_cidr
-    source_type = "CIDR_BLOCK"
-    protocol    = "6"
-    tcp_options {
-      min = 443
-      max = 443
-    }
-  }
-
-  # Allow kubectl from VCN only.
-  ingress_security_rules {
-    stateless   = false
-    source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
     protocol    = "6"
     tcp_options {
