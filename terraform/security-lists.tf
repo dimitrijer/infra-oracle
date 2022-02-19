@@ -56,7 +56,7 @@ resource "oci_core_security_list" "isolated" {
     source      = var.vcn_cidr
     source_type = "CIDR_BLOCK"
     protocol    = "6"
-    udp_options {
+    tcp_options {
       min = 30000
       max = 32767
     }
