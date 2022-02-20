@@ -32,11 +32,12 @@
         state: absent
         path: "/etc/NetworkManager/conf.d/{{ secondary_if.macaddress| upper | replace(':','_') }}.conf"
 
-    - name: Manage secondary VNIC with NetworkManager
+    - name: Manage secondary VNIC with NetworkManager, set zone to internal
       nmcli:
         conn_name: "{{ secondary_if.device }}"
         ifname: "{{ secondary_if.device }}"
         state: present
+        zone: internal
 
     - name: Check if static route is set up
       shell: "ip route get 192.168.0.1 | grep {{ secondary_if.device }}"
@@ -56,7 +57,23 @@
         interface: "{{ primary_if.device }}"
         permanent: yes
         zone: public
-      notify: Reload firewalld
+      notify: Restart firewalld
+
+    - name: Set up masquerading and forwarding for public zone
+      firewalld:
+        state: enabled
+        masquerade: yes
+        permanent: yes
+        zone: public
+      notify: Restart firewalld
+
+    - name: Remove secondary interface from public zone
+      firewalld:
+        state: disabled
+        interface: "{{ secondary_if.device }}"
+        permanent: yes
+        zone: public
+      notify: Restart firewalld
 
     - name: Add secondary interface to internal zone
       firewalld:
@@ -64,22 +81,17 @@
         interface: "{{ secondary_if.device }}"
         permanent: yes
         zone: internal
-      notify: Reload firewalld
+      notify: Restart firewalld
 
-    - name: Set up masquerading and forwarding
-      firewalld:
-        state: enabled
-        masquerade: yes
-        permanent: yes
-        zone: public
-      notify: Reload firewalld
 
   handlers:
     - name: Reload sysctl
       command: sysctl --system
 
-    - name: Reload firewalld
-      command: firewall-cmd --reload
+    - name: Restart firewalld
+      systemd:
+        name: firewalld
+        state: restarted
 
     - name: Bring connection down
       command: "nmcli conn down {{ secondary_if.device }}"

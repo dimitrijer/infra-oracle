@@ -5,4 +5,4 @@
 - name: Reload firewalld
   systemd:
     name: firewalld
-    status: restarted
+    state: restarted
