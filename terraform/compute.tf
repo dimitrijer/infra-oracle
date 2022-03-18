@@ -19,7 +19,7 @@ resource "oci_core_instance" "tengu" {
   }
 
   metadata = {
-    ssh_authorized_keys = var.pubkey
+    ssh_authorized_keys = var.pubkeys
   }
 
   is_pv_encryption_in_transit_enabled = false
@@ -47,7 +47,7 @@ resource "oci_core_instance" "kitsune" {
   }
 
   metadata = {
-    ssh_authorized_keys = var.pubkey
+    ssh_authorized_keys = var.pubkeys
   }
 
   is_pv_encryption_in_transit_enabled = false
@@ -75,7 +75,7 @@ resource "oci_core_instance" "amaterasu" {
   }
 
   metadata = {
-    ssh_authorized_keys = var.pubkey
+    ssh_authorized_keys = var.pubkeys
   }
 
   is_pv_encryption_in_transit_enabled = false
@@ -103,7 +103,7 @@ resource "oci_core_instance" "kirin" {
   }
 
   metadata = {
-    ssh_authorized_keys = var.pubkey
+    ssh_authorized_keys = var.pubkeys
   }
 
   is_pv_encryption_in_transit_enabled = false

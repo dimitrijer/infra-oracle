@@ -67,7 +67,10 @@ variable "compute_image_x86_ocid" {
   default = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaacdxb2cpmyxtqfinev5vywq6yu4p47mgty6wjfd7xmrgauop6ieya"
 }
 
-variable "pubkey" {
+variable "pubkeys" {
   type    = string
-  default = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJExlztyJfbsdPkZHkzmCQj+NOfpiRaqVj8Qn/fXRN69 dimitrijer@dimitrijer-mbp17.local"
+  default = <<EOT
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJExlztyJfbsdPkZHkzmCQj+NOfpiRaqVj8Qn/fXRN69 dimitrijer@dimitrijer-mbp17.local
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJklWVMXaRPHb2+px018aQdEldAtzt9+MZHqImMmDFZa dimitrije@prospect
+EOT
 }
