@@ -1,6 +1,6 @@
 let
   sources = import ./nix/sources.nix;
-  pkgs = import sources.nixpkgs { overlays = []; config = {}; };
+  pkgs = import sources.nixpkgs { overlays = [ ]; config = { }; };
   nixfiles = import sources.nixfiles { };
   neovim = nixfiles.neovim { pkgs = pkgs; };
 in
@@ -9,6 +9,7 @@ pkgs.mkShell {
     git
     ansible
     terraform
+    kubectl
     # Editing
     nixpkgs-fmt
     ripgrep
